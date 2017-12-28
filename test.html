@@ -1,0 +1,75 @@
+<html>
+	<body id="body">
+		<div>
+			<my-element></my-element>
+		</div>
+
+		<div>
+			<div>
+				<my-element></my-element>
+			</div>
+		</div>
+	</body>
+
+	<script>
+		window.onload = function(){
+			function Vue(param){
+				this.compile(param);
+			}
+
+			Vue.myElList = {};
+
+			Vue.element = function(tagName, setting){
+				let div = document.createElement('div'),
+					frag = document.createDocumentFragment(),
+					child;
+
+				div.innerHTML = setting.template.trim();
+			
+				while(child = div.firstChild){
+					frag.appendChild(child);
+				}
+
+				Vue.myElList[tagName] = {
+					replace: setting.replace,
+					className: setting.className,
+					template: frag
+				};
+			}
+
+			Vue.prototype = {
+				compile: function(param){
+					let root = document.getElementById(param.el);
+					
+					this.compileChild(root);
+				},
+				compileChild(el){
+					for(let childEl of el.childNodes){
+						let setting = Vue.myElList[childEl.tagName && childEl.tagName.toLowerCase()];
+						if(setting){
+							if(setting.replace){
+								childEl.replaceWith(setting.template.cloneNode(true));
+							}else{
+								childEl.appendChild(setting.template.cloneNode(true));
+							}
+						}else{
+							if(childEl.childNodes){
+								this.compileChild(childEl);
+							}
+						}
+					}
+				}
+			}
+
+			Vue.element('my-element', {
+			    replace: false,
+			    className: 'test',
+			    template: '<div>{{msg}}</div>'
+			})
+
+			new Vue({
+			    el:'body'
+			})
+		}
+	</script>
+</html>
